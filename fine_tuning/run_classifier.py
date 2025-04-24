@@ -7,8 +7,12 @@ import argparse
 import sys
 import torch
 import torch.nn as nn
+import tqdm
+import numpy as np
 
 sys.path.append(os.getcwd())
+from fine_tuning.dataset import read_dataset
+
 from uer.layers import *
 from uer.encoders import *
 from uer.utils.vocab import Vocab
@@ -19,8 +23,7 @@ from uer.utils.config import load_hyperparam
 from uer.utils.seed import set_seed
 from uer.model_saver import save_model
 from uer.opts import finetune_opts
-import tqdm
-import numpy as np
+
 
 class Classifier(nn.Module):
     def __init__(self, args):
@@ -140,41 +143,40 @@ def batch_loader(batch_size, src, tgt, seg, soft_tgt=None):
             yield src_batch, tgt_batch, seg_batch, None
 
 
-def read_dataset(args, path):
-    dataset, columns = [], {}
-    with open(path, mode="r", encoding="utf-8") as f:
-        for line_id, line in enumerate(f):
-            if line_id == 0:
-                for i, column_name in enumerate(line.strip().split("\t")):
-                    columns[column_name] = i
-                continue
-            line = line[:-1].split("\t")
-            tgt = int(line[columns["label"]])
-            if args.soft_targets and "logits" in columns.keys():
-                soft_tgt = [float(value) for value in line[columns["logits"]].split(" ")]
-            if "text_b" not in columns:  # Sentence classification.
-                text_a = line[columns["text_a"]]
-                src = args.tokenizer.convert_tokens_to_ids([CLS_TOKEN] + args.tokenizer.tokenize(text_a))
-                seg = [1] * len(src)
-            else:  # Sentence-pair classification.
-                text_a, text_b = line[columns["text_a"]], line[columns["text_b"]]
-                src_a = args.tokenizer.convert_tokens_to_ids([CLS_TOKEN] + args.tokenizer.tokenize(text_a) + [SEP_TOKEN])
-                src_b = args.tokenizer.convert_tokens_to_ids(args.tokenizer.tokenize(text_b) + [SEP_TOKEN])
-                src = src_a + src_b
-                seg = [1] * len(src_a) + [2] * len(src_b)
+# def read_dataset(args, path):
+#     dataset, columns = [], {}
+#     with open(path, mode="r", encoding="utf-8") as f:
+#         for line_id, line in enumerate(tqdm.tqdm(f, desc="Processing lines", unit="line")):
+#             if line_id == 0:
+#                 for i, column_name in enumerate(line.strip().split("\t")):
+#                     columns[column_name] = i
+#                 continue
+#             line = line[:-1].split("\t")
+#             tgt = int(line[columns["label"]])
+#             if args.soft_targets and "logits" in columns.keys():
+#                 soft_tgt = [float(value) for value in line[columns["logits"]].split(" ")]
+#             if "text_b" not in columns:  # Sentence classification.
+#                 text_a = line[columns["text_a"]]
+#                 src = args.tokenizer.convert_tokens_to_ids([CLS_TOKEN] + args.tokenizer.tokenize(text_a))
+#                 seg = [1] * len(src)
+#             else:  # Sentence-pair classification.
+#                 text_a, text_b = line[columns["text_a"]], line[columns["text_b"]]
+#                 src_a = args.tokenizer.convert_tokens_to_ids([CLS_TOKEN] + args.tokenizer.tokenize(text_a) + [SEP_TOKEN])
+#                 src_b = args.tokenizer.convert_tokens_to_ids(args.tokenizer.tokenize(text_b) + [SEP_TOKEN])
+#                 src = src_a + src_b
+#                 seg = [1] * len(src_a) + [2] * len(src_b)
 
-            if len(src) > args.seq_length:
-                src = src[: args.seq_length]
-                seg = seg[: args.seq_length]
-            while len(src) < args.seq_length:
-                src.append(0)
-                seg.append(0)
-            if args.soft_targets and "logits" in columns.keys():
-                dataset.append((src, tgt, seg, soft_tgt))
-            else:
-                dataset.append((src, tgt, seg))
-
-    return dataset
+#             if len(src) > args.seq_length:
+#                 src = src[: args.seq_length]
+#                 seg = seg[: args.seq_length]
+#             while len(src) < args.seq_length:
+#                 src.append(0)
+#                 seg.append(0)
+#             if args.soft_targets and "logits" in columns.keys():
+#                 dataset.append((src, tgt, seg, soft_tgt))
+#             else:
+#                 dataset.append((src, tgt, seg))
+#     return dataset
 
 
 def train_model(args, model, optimizer, scheduler, src_batch, tgt_batch, seg_batch, soft_tgt_batch=None):
@@ -293,6 +295,9 @@ def main():
 
     # Training phase.
     trainset = read_dataset(args, args.train_path)
+    # # # generate cache of valid and test dataset
+    # read_dataset(args, args.dev_path)
+    # read_dataset(args, args.test_path)
     random.shuffle(trainset)
     instances_num = len(trainset)
     batch_size = args.batch_size

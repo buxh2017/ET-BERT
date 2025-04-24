@@ -9,7 +9,7 @@
             "name": "fine-tuning",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/fine-tuning/run_classifier.py",
+            "program": "${workspaceFolder}/fine_tuning/run_classifier.py",
             "console": "integratedTerminal",
             "args": [
                 "--pretrained_model_path", "tmp/models/pre-trained_model.bin",
