@@ -1,0 +1,48 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "fine-tuning",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/fine-tuning/run_classifier.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--pretrained_model_path", "tmp/models/pre-trained_model.bin",
+                "--vocab_path", "models/encryptd_vocab.txt",
+                "--train_path", "tmp/datasets/train_dataset.tsv",
+                "--dev_path", "tmp/datasets/valid_dataset.tsv",
+                "--test_path", "tmp/datasets/test_dataset.tsv",
+                "--epochs_num", "10",
+                "--batch_size", "32",
+                "--embedding", "word_pos_seg",
+                "--encoder", "transformer",
+                "--mask", "fully_visible",
+                "--seq_length", "128",
+                "--learning_rate", "2e-5"
+            ]
+        },
+        {
+            "name": "predict",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/inference/run_classifier_infer.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--pretrained_model_path", "models/pre-trained_model.bin",
+                "--load_model_path", "models/finetuned_model.bin",
+                "--vocab_path", "models/encryptd_vocab.txt",
+                "--test_path", "datasets/cstnet-tls1.3/packet/nolabel_test_dataset.tsv",
+                "--prediction_path", "datasets/cstnet-tls1.3/packet/prediction.tsv",
+                "--labels_num", "120",
+                "--embedding", "word_pos_seg",
+                "--encoder", "transformer",
+                "--mask", "fully_visible"
+            ]
+        }
+    ]
+}

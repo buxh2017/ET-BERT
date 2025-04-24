@@ -21,10 +21,18 @@ import dataset_generation
 import data_preprocess
 import open_dataset_deal
 
-_category = 120 # dataset class
-dataset_dir = "I:\\datasets\\" # the path to save dataset for dine-tuning
+sys.path.append(os.getcwd())
+import config
 
-pcap_path, dataset_save_path, samples, features, dataset_level = "I:\\cstnet-tls1.3\\packet\\splitcap\\", "I:\\cstnet-tls1.3\\packet\\result\\", [5000], ["payload"], "packet"
+_category = 120 # dataset class
+#dataset_dir = "I:/datasets/" # the path to save dataset for dine-tuning
+dataset_dir = os.environ['DATASET_DIR'] + "/"
+
+# pcap_path, dataset_save_path, samples, features, dataset_level = "I:/cstnet-tls1.3/packet/splitcap/", "I:/cstnet-tls1.3/packet/result/", [5000], ["payload"], "packet"
+pcap_path = f"{dataset_dir}/cstnet-tls1.3/packet/splitcap/"
+dataset_save_path = f"{dataset_dir}/cstnet-tls1.3/packet/result/"
+samples, features, dataset_level = [5000], ["payload"], "packet"
+
 
 def dataset_extract(model):
     
@@ -32,13 +40,13 @@ def dataset_extract(model):
     Y_dataset = {}
 
     try:
-        if os.listdir(dataset_save_path + "dataset\\"):
-            print("Reading dataset from %s ..." % (dataset_save_path + "dataset\\"))
+        if os.listdir(dataset_save_path + "dataset/"):
+            print("Reading dataset from %s ..." % (dataset_save_path + "dataset/"))
             
             x_payload_train, x_payload_test, x_payload_valid,\
             y_train, y_test, y_valid = \
-                np.load(dataset_save_path + "dataset\\x_datagram_train.npy",allow_pickle=True), np.load(dataset_save_path + "dataset\\x_datagram_test.npy",allow_pickle=True), np.load(dataset_save_path + "dataset\\x_datagram_valid.npy",allow_pickle=True),\
-                np.load(dataset_save_path + "dataset\\y_train.npy",allow_pickle=True), np.load(dataset_save_path + "dataset\\y_test.npy",allow_pickle=True), np.load(dataset_save_path + "dataset\\y_valid.npy",allow_pickle=True)
+                np.load(dataset_save_path + "dataset/x_datagram_train.npy",allow_pickle=True), np.load(dataset_save_path + "dataset/x_datagram_test.npy",allow_pickle=True), np.load(dataset_save_path + "dataset/x_datagram_valid.npy",allow_pickle=True),\
+                np.load(dataset_save_path + "dataset/y_train.npy",allow_pickle=True), np.load(dataset_save_path + "dataset/y_test.npy",allow_pickle=True), np.load(dataset_save_path + "dataset/y_valid.npy",allow_pickle=True)
             
             X_dataset, Y_dataset = models_deal(model, X_dataset, Y_dataset,
                                                x_payload_train, x_payload_test,
@@ -48,7 +56,7 @@ def dataset_extract(model):
             return X_dataset, Y_dataset
     except Exception as e:
         print(e)
-        print("Dataset directory %s not exist.\nBegin to obtain new dataset."%(dataset_save_path + "dataset\\"))
+        print("Dataset directory %s not exist.\nBegin to obtain new dataset."%(dataset_save_path + "dataset/"))
 
     X,Y = dataset_generation.generation(pcap_path, samples, features, splitcap=False, dataset_save_path=dataset_save_path,dataset_level=dataset_level)
 
@@ -96,18 +104,18 @@ def dataset_extract(model):
         x_payload_valid, y_valid = x_payload_test[valid_index], y_test[valid_index]
         x_payload_test, y_test = x_payload_test[test_index], y_test[test_index]
 
-    if not os.path.exists(dataset_save_path+"dataset\\"):
-        os.mkdir(dataset_save_path+"dataset\\")
+    if not os.path.exists(dataset_save_path+"dataset/"):
+        os.mkdir(dataset_save_path+"dataset/")
 
-    output_x_payload_train = os.path.join(dataset_save_path + "dataset\\", 'x_datagram_train.npy')
+    output_x_payload_train = os.path.join(dataset_save_path + "dataset/", 'x_datagram_train.npy')
 
-    output_x_payload_test = os.path.join(dataset_save_path + "dataset\\", 'x_datagram_test.npy')
+    output_x_payload_test = os.path.join(dataset_save_path + "dataset/", 'x_datagram_test.npy')
 
-    output_x_payload_valid = os.path.join(dataset_save_path + "dataset\\", 'x_datagram_valid.npy')
+    output_x_payload_valid = os.path.join(dataset_save_path + "dataset/", 'x_datagram_valid.npy')
 
-    output_y_train = os.path.join(dataset_save_path+"dataset\\",'y_train.npy')
-    output_y_test = os.path.join(dataset_save_path + "dataset\\", 'y_test.npy')
-    output_y_valid = os.path.join(dataset_save_path + "dataset\\", 'y_valid.npy')
+    output_y_train = os.path.join(dataset_save_path+"dataset/",'y_train.npy')
+    output_y_test = os.path.join(dataset_save_path + "dataset/", 'y_test.npy')
+    output_y_valid = os.path.join(dataset_save_path + "dataset/", 'y_valid.npy')
 
     np.save(output_x_payload_train, x_payload_train)
     np.save(output_x_payload_test, x_payload_test)
@@ -186,7 +194,7 @@ def count_label_number(samples):
     new_samples = samples * _category
     
     if 'splitcap' not in pcap_path:
-        dataset_length, labels = open_dataset_deal.statistic_dataset_sample_count(pcap_path + 'splitcap\\')
+        dataset_length, labels = open_dataset_deal.statistic_dataset_sample_count(pcap_path + 'splitcap/')
     else:
         dataset_length, labels = open_dataset_deal.statistic_dataset_sample_count(pcap_path)
 
@@ -204,9 +212,9 @@ if __name__ == '__main__':
         for p,d,f in os.walk(pcap_path):
             for file in f:
                 target_file = file.replace('.','_new.')
-                open_dataset_deal.file_2_pcap(p+"\\"+file, p+"\\"+target_file)
+                open_dataset_deal.file_2_pcap(p+"/"+file, p+"/"+target_file)
                 if '_new.pcap' not in file:
-                    os.remove(p+"\\"+file)
+                    os.remove(p+"/"+file)
 
     file2dir = 0
     if file2dir:

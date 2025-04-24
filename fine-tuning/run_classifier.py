@@ -1,10 +1,14 @@
 """
 This script provides an exmaple to wrap UER-py for classification.
 """
+import os
 import random
 import argparse
+import sys
 import torch
 import torch.nn as nn
+
+sys.path.append(os.getcwd())
 from uer.layers import *
 from uer.encoders import *
 from uer.utils.vocab import Vocab
@@ -82,7 +86,10 @@ def count_labels_num(path):
 def load_or_initialize_parameters(args, model):
     if args.pretrained_model_path is not None:
         # Initialize with pretrained model.
-        model.load_state_dict(torch.load(args.pretrained_model_path, map_location={'cuda:1':'cuda:0', 'cuda:2':'cuda:0', 'cuda:3':'cuda:0'}), strict=False)
+        if torch.cuda.is_available():
+            model.load_state_dict(torch.load(args.pretrained_model_path, map_location={'cuda:1':'cuda:0', 'cuda:2':'cuda:0', 'cuda:3':'cuda:0'}), strict=False)
+        else:
+            model.load_state_dict(torch.load(args.pretrained_model_path, map_location=torch.device('cpu')), strict=False)
     else:
         # Initialize with normal distribution.
         for n, p in list(model.named_parameters()):
