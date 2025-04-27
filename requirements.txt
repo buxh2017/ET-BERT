@@ -2,3 +2,14 @@ torch>=1.0
 argparse
 six>=1.12.0
 packaging
+
+xlrd
+scikit-learn
+pandas
+scipy
+scapy
+flowcontainer
+
+tqdm
+numpy
+apex

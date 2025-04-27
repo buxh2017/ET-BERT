@@ -11,6 +11,7 @@ import tqdm
 import numpy as np
 
 sys.path.append(os.getcwd())
+import config
 from fine_tuning.dataset import read_dataset
 
 from uer.layers import *
@@ -23,6 +24,8 @@ from uer.utils.config import load_hyperparam
 from uer.utils.seed import set_seed
 from uer.model_saver import save_model
 from uer.opts import finetune_opts
+
+TMP_DIR = os.environ['TMP_DIR']
 
 
 class Classifier(nn.Module):
@@ -233,7 +236,9 @@ def evaluate(args, dataset, print_confusion_matrix=False):
         print("Confusion matrix:")
         print(confusion)
         cf_array = confusion.numpy()
-        with open("/data2/lxj/pre-train/results/confusion_matrix",'w') as f:
+        pretrain_res_dir = f"{TMP_DIR}/pre-train/results"
+        os.makedirs(pretrain_res_dir, exist_ok=True)
+        with open(f"{pretrain_res_dir}/confusion_matrix",'w') as f:
             for cf_a in cf_array:
                 f.write(str(cf_a)+'\n')
         print("Report precision, recall, and f1:")
@@ -342,6 +347,8 @@ def main():
             if (i + 1) % args.report_steps == 0:
                 print("Epoch id: {}, Training steps: {}, Avg loss: {:.3f}".format(epoch, i + 1, total_loss / args.report_steps))
                 total_loss = 0.0
+            # if i > 200:
+            #     break
 
         result = evaluate(args, read_dataset(args, args.dev_path))
         if result[0] > best_result:
@@ -359,4 +366,6 @@ def main():
 
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.set_start_method('spawn')
     main()
