@@ -5,6 +5,7 @@ import os
 import random
 import argparse
 import sys
+import time
 import torch
 import torch.nn as nn
 import tqdm
@@ -340,6 +341,7 @@ def main():
     print("Start training.")
 
     for epoch in tqdm.tqdm(range(1, args.epochs_num + 1)):
+        start_time = time.time()
         model.train()
         for i, (src_batch, tgt_batch, seg_batch, soft_tgt_batch) in enumerate(batch_loader(batch_size, src, tgt, seg, soft_tgt)):
             loss = train_model(args, model, optimizer, scheduler, src_batch, tgt_batch, seg_batch, soft_tgt_batch)
@@ -349,7 +351,8 @@ def main():
                 total_loss = 0.0
             # if i > 200:
             #     break
-
+        end_time = time.time()
+        print(f'{epoch=} training spend time: {end_time-start_time} Seconds')
         result = evaluate(args, read_dataset(args, args.dev_path))
         if result[0] > best_result:
             best_result = result[0]

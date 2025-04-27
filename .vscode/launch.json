@@ -33,11 +33,10 @@
             "program": "${workspaceFolder}/inference/run_classifier_infer.py",
             "console": "integratedTerminal",
             "args": [
-                "--pretrained_model_path", "models/pre-trained_model.bin",
                 "--load_model_path", "models/finetuned_model.bin",
                 "--vocab_path", "models/encryptd_vocab.txt",
-                "--test_path", "datasets/cstnet-tls1.3/packet/nolabel_test_dataset.tsv",
-                "--prediction_path", "datasets/cstnet-tls1.3/packet/prediction.tsv",
+                "--test_path", "tmp/datasets/nolabel_test_dataset.tsv",
+                "--prediction_path", "tmp/datasets/prediction.tsv",
                 "--labels_num", "120",
                 "--embedding", "word_pos_seg",
                 "--encoder", "transformer",
